@@ -17,11 +17,11 @@
 import { cpSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { buildBoard, calibrate, livePeers } from "./lib/model.ts";
+import { buildBoard, calibrate, coverageAccounting, crossValidate, fitRegression, livePeers } from "./lib/model.ts";
 import type { Snapshot } from "./lib/model.ts";
 import { buildDossier } from "./vendor/makefun-board.ts";
 
-const MODEL_FORMULA = "implied = TVL x category multiple x growth x maturity x breadth";
+const MODEL_FORMULA = "implied = sqrt(TVL x category multiple x fitted value from log TVL and log age)";
 
 function inputPath(argv: string[]): string {
   const flag = argv.indexOf("--input");
@@ -46,6 +46,9 @@ function main(): void {
   const outDir = outputDir();
   const snapshot = JSON.parse(readFileSync(inputPath(process.argv), "utf8")) as Snapshot;
   const calibration = calibrate(snapshot);
+  const fit = fitRegression(snapshot);
+  const validation = crossValidate(snapshot);
+  const coverage = coverageAccounting(snapshot);
   const rows = buildBoard(snapshot);
   const live = livePeers(snapshot);
   // The calibration table shows only the categories the board actually uses,
@@ -62,6 +65,9 @@ function main(): void {
   }
   calibrationRows.sort((a, b) => (a.category < b.category ? -1 : 1));
   const watchlistRows = rows.filter((row) => row.watchlist).length;
+  const baseRate = snapshot.protocols.filter(
+    (p) => p.gecko_id !== null || p.symbol !== null,
+  ).length / snapshot.protocols.length;
 
   const meta = {
     as_of: snapshot.as_of,
@@ -69,9 +75,27 @@ function main(): void {
     model: MODEL_FORMULA,
     global_median_mcap_tvl: calibration.globalMedian,
     calibration_peers: calibration.peerCount,
+    fit: {
+      beta: fit.beta,
+      n: fit.n,
+      median_age_days: fit.medianAgeDays,
+      r_squared: fit.rSquared,
+      median_abs_log_err: fit.medianAbsLogErr,
+    },
+    validation,
+    odds_base_rate: baseRate,
+    refits: 200,
     rows: rows.length,
     watchlist_rows: watchlistRows,
     early_rows: rows.length - watchlistRows,
+    coverage: {
+      total: coverage.total,
+      board: coverage.board,
+      live: coverage.live,
+      recorded_no_mcap: coverage.recordedNoMcap,
+      above_floor: coverage.aboveFloor,
+      excluded_below_floor: coverage.excluded - coverage.aboveFloor,
+    },
     note: "A protocol records no token when the snapshot carries neither a CoinGecko id nor a ticker for it; that is the snapshot's record, not proof it has none.",
   };
 
@@ -85,6 +109,7 @@ function main(): void {
     rows,
     live,
     calibration: calibrationRows,
+    excluded: coverage.excludedList,
   };
   writeFileSync(join(outDir, "data.js"), `window.RADAR = ${JSON.stringify(pageData)};\n`, "utf8");
 
@@ -95,6 +120,7 @@ function main(): void {
   writeFileSync(join(outDir, "dossier.json"), dossier);
 
   console.log(`token-radar: ${rows.length} rows (${watchlistRows} watchlist, ${rows.length - watchlistRows} early) -> ${outDir}`);
+  console.log(`coverage: ${coverage.board} board + ${coverage.live} live + ${coverage.recordedNoMcap} recorded-no-mcap + ${coverage.aboveFloor} above-floor + ${coverage.excluded - coverage.aboveFloor} excluded = ${coverage.total}`);
 }
 
 main();

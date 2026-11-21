@@ -150,6 +150,7 @@ tbody tr.selected { background: var(--amber-soft); }
 
 td.rank { color: var(--amber); font-weight: 700; }
 td.implied { font-weight: 700; }
+td.expected { font-weight: 600; color: var(--amber); }
 td.name b { display: block; font-weight: 600; }
 td.name span { color: var(--faint); font-size: 12px; }
 td .pill {
@@ -207,10 +208,28 @@ td .pill.watch { color: var(--amber); border-color: var(--amber); }
 .steps li { margin: 0 0 10px; font-size: 14px; }
 .steps li::marker { color: var(--amber); font-weight: 700; }
 
-.calibration, .method { max-width: 1180px; margin: 28px auto 0; padding: 0 20px; }
-.calibration h2, .method h2 { font-size: 18px; margin: 0 0 8px; }
-.calibration p, .method p { color: var(--muted); max-width: 780px; }
+.calibration, .method, .model, .coverage { max-width: 1180px; margin: 28px auto 0; padding: 0 20px; }
+.calibration h2, .method h2, .model h2, .coverage h2 { font-size: 18px; margin: 0 0 8px; }
+.calibration p, .method p, .model p, .coverage p { color: var(--muted); max-width: 780px; }
 .calibration table { max-width: 640px; }
+.model table { max-width: 780px; }
+.model tr.best td { color: var(--amber); font-weight: 600; }
+.coverage details { margin-top: 12px; }
+.coverage summary { cursor: pointer; color: var(--amber); }
+.coverage table { max-width: 780px; margin-top: 10px; }
+.coverage td { white-space: normal; font-size: 14px; }
+.verdict {
+  display: inline-block;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 3px 12px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+}
+.verdict.farm { color: var(--green); border-color: var(--green); }
+.verdict.small { color: var(--amber); border-color: var(--amber); }
+.verdict.watch { color: var(--muted); border-color: var(--muted); }
+.verdict.skip { color: var(--red); border-color: var(--red); }
 .method { padding-bottom: 40px; }
 
 @media (max-width: 900px) {
