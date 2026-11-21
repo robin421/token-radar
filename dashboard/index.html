@@ -3,12 +3,90 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Token Radar: which protocol launches next, and what its token is worth</title>
+<title>Token Radar — which pre-token protocol to farm next</title>
 <link rel="stylesheet" href="app.css">
 </head>
 <body>
-<a class="skip" href="#board">Skip to the board</a>
-<main id="board" tabindex="-1" aria-busy="true"></main>
+<header class="top">
+  <div class="brand">
+    <span class="mark" aria-hidden="true"></span>
+    <div>
+      <h1>Token Radar</h1>
+      <p class="tagline">Pre-token protocols, ranked by what their launch would be worth — and how to farm each one.</p>
+    </div>
+  </div>
+  <p class="asof" id="asof"></p>
+</header>
+
+<section class="stats" id="stats" aria-label="Board summary"></section>
+
+<section class="controls" aria-label="Filters">
+  <label class="search">Search
+    <input id="q" type="search" placeholder="Protocol name or slug" autocomplete="off">
+  </label>
+  <label>Category
+    <select id="category"><option value="">All categories</option></select>
+  </label>
+  <label>Chain
+    <select id="chain"><option value="">All chains</option></select>
+  </label>
+  <fieldset class="toggle" id="scope">
+    <legend>Scope</legend>
+    <button type="button" data-scope="all" class="on" aria-pressed="true">All</button>
+    <button type="button" data-scope="watchlist" aria-pressed="false">Watchlist</button>
+    <button type="button" data-scope="early" aria-pressed="false">Early</button>
+  </fieldset>
+  <fieldset class="toggle" id="kind">
+    <legend>Board</legend>
+    <button type="button" data-kind="pre" class="on" aria-pressed="true">Pre-token</button>
+    <button type="button" data-kind="live" aria-pressed="false">Live tokens</button>
+  </fieldset>
+</section>
+
+<p class="count" id="count" role="status"></p>
+
+<main class="layout">
+  <div class="table-wrap">
+    <table id="board">
+      <thead>
+        <tr>
+          <th data-sort="rank" scope="col"><button type="button">Rank</button></th>
+          <th data-sort="name" scope="col"><button type="button">Protocol</button></th>
+          <th data-sort="category" scope="col"><button type="button">Category</button></th>
+          <th data-sort="tvl" scope="col"><button type="button">TVL</button></th>
+          <th data-sort="change" scope="col"><button type="button">7d</button></th>
+          <th data-sort="multiple" scope="col"><button type="button">Multiple</button></th>
+          <th data-sort="implied" scope="col"><button type="button">Implied value</button></th>
+        </tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+    <p class="hint">Click a row to open its detail: the model's breakdown and the seven-step farm plan. Click a column header to sort.</p>
+  </div>
+
+  <aside class="drawer" id="drawer" aria-label="Protocol detail" hidden>
+    <button type="button" class="close" id="drawer-close" aria-label="Close detail">×</button>
+    <div id="drawer-body"></div>
+  </aside>
+</main>
+
+<section class="calibration">
+  <h2>How the multiples are set</h2>
+  <p>Each category's multiple is the median market-cap-to-TVL ratio of the protocols in it whose token already trades, shrunk toward the global median when the category has few such peers. The table below is the calibration itself — every multiple on the board traces to a row here. Categories with fewer than two peers use the global median.</p>
+  <table id="calibration-table">
+    <thead>
+      <tr><th scope="col">Category</th><th scope="col">Live peers</th><th scope="col">Peer median</th><th scope="col">Multiple used</th></tr>
+    </thead>
+    <tbody id="calibration-rows"></tbody>
+  </table>
+</section>
+
+<footer class="method">
+  <h2>Method</h2>
+  <p id="method-text"></p>
+  <p>A protocol "records no token" when the snapshot carries neither a CoinGecko id nor a ticker for it. That is the snapshot's record, not proof it has none: a protocol on the board may still have a token its record does not carry. Implied values are this radar's own claim, never a promise — a launch may never happen, and a token that does launch may be worth far more or far less.</p>
+</footer>
+
 <script src="../data.js"></script>
 <script src="app.js"></script>
 </body>
